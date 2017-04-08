@@ -1,0 +1,20 @@
+<html>
+    <head></head>
+    <body>
+    <button id="button">press</button>
+    <script type="text/javascript">
+        var button = document.getElementById('button');
+        button.addEventListener('click', function(event){
+        window.fetch('http://127.0.0.1:3000/int', {
+            method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({location: location})
+        });
+
+    });
+    </script>>
+    </body>
+</html>
