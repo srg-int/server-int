@@ -1,9 +1,14 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var http = require('http');
 var path = require('path');
-const fs = require('fs');
+var fs = require('fs');
+var request = require('request');
 
 var app = express();
+
+
+const PHOTO_DIR	= 'C:\\cloud.mail.ru\\intPhoto\\';
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -11,7 +16,7 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '10mb'}));
 
 app.use("/", express.static(__dirname + '/'));
 app.use("/", express.static('../'));
@@ -30,18 +35,35 @@ app.post('/nodeLogger', function (req, res) {
 app.post('/int', function (req, res) {
 
     var data = req.body;
-    console.log(data);
+
+	download(data.photoUrl, createName(data), function(){
+	  console.log('done');
+	});
+
     res.end();
-/*
-    var request = require('request');
-	request(data.location.href, function (error, response, body) {
-  	if (!error && response.statusCode == 200) {
-  		var ves = body.indexOf('Вес:');
-  	    console.log(body);
-  	}
-})*/
+
 });
 
 app.listen(3000, function () {
     console.info('Application has started!');
 });
+
+function download(uri, filename, callback){
+	request.head(uri, function(err, res, body){
+		console.log('content-type:', res.headers['content-type']);
+		console.log('content-length:', res.headers['content-length']);
+		request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+	});
+};
+
+function createName(data) {
+	return PHOTO_DIR + 
+	data.url.slice(-6) + 
+	(data.age ? '.' + data.age : '') +
+	(data.height ? '.' + data.height : '') +
+	(data.weight ? '.' + data.weight : '') +
+	(data.phoneNumber ? '.' + data.phoneNumber : '') +
+	'.' + data.date.split(' ')[0] + 
+	'.jpg'
+
+}
