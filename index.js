@@ -63,7 +63,7 @@ function createName(data) {
 	(data.height ? '.' + data.height : '') +
 	(data.weight ? '.' + data.weight : '') +
 	(data.phoneNumber ? '.' + data.phoneNumber : '') +
-	'.' + data.date.split(' ')[0] + 
+	(data.date ? '.' + data.date.split(' ')[0] : '') +
 	'.jpg'
 
 }
