@@ -1,0 +1,102 @@
+<html>
+    <head>
+      <style type="text/css">
+        td {
+          border-bottom:1pt solid black;
+        }
+      </style>
+    </head>
+    <body>
+    <table>
+        <thead>
+            <tr>
+              <th>counter</th>
+              <th>id</th>
+              <th>age</th>
+              <th>height</th>
+              <th>weight</th>
+              <th>PhoneNummer</th>
+              <th>date</th>
+              <th>textInfo</th>
+              <th>photoUrl</th>
+              <th>url</th>
+              <th>email</th>
+              <th>phoneStr</th>
+            </tr>
+        </thead>
+<!--         <tfoot>
+            <tr>
+              <th>counter</th>
+              <th>id</th>
+              <th>age</th>
+              <th>height</th>
+              <th>weight</th>
+              <th>PhoneNummer</th>
+              <th>date</th>
+              <th>email</th>
+              <th>photoUrl</th>
+              <th>url</th>
+              <th>phoneStr</th>
+              <th>textInfo</th>
+            </tr>
+        </tfoot> -->
+  <tbody id='tbody'>
+    
+  </tbody>
+</table>
+    <script type="text/javascript">
+        var tbody = document.getElementById('tbody');
+
+        window.fetch('http://127.0.0.1:3000/allItems', {
+            method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({query: '*'})
+        }).then(function(res) {
+            return res.json();
+        }).then(function(data) {
+            console.log(data);
+
+            data.forEach(function(element){
+                var tr = document.createElement('tr');
+                tr.setAttribute('data-counter', element.counter)
+
+                
+
+                Object.keys(element).forEach(function(el){
+                    if(el === 'base64data' || el === 'photo'){
+                        return;
+                    }
+
+                    if(el === 'url' || el === 'photoUrl'){
+                      var td = document.createElement('td');
+                      var a = document.createElement('a');
+                      a.href = element[el];
+                      a.innerHTML = 'Photo';
+                      td.setAttribute('class', el);
+                      td.appendChild(a); //.innerHTML = element[el];
+                      tr.appendChild(td);
+                    } else {
+                      var td = document.createElement('td');
+                      td.setAttribute('class', el);
+                      td.innerHTML = element[el];
+                      tr.appendChild(td);
+                    }
+
+                    
+
+                })
+
+                tbody.appendChild(tr);
+            });
+
+        }).catch(function(err) {
+            console.error(err);
+        });
+
+
+    </script>
+    </body>
+</html>

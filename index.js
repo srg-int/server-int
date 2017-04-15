@@ -4,6 +4,7 @@ var http = require('http');
 var path = require('path');
 var fs = require('fs');
 var request = require('request');
+var Stream = require('stream').Transform;    
 
 
 var mysql      = require('mysql');
@@ -11,7 +12,7 @@ var connection = mysql.createConnection({
 	host     : 'localhost',
 	user     : 'root',
 	password : '2330972',
-	database : 'sakila'
+	database : 'int'
 });
 connection.connect();
 
@@ -35,27 +36,84 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html')
 });
 
-app.post('/nodeLogger', function (req, res) {
-    var data = req.body;
+app.get('/all', function (req, res) {
+    res.sendFile(__dirname + '/all.html')
+});
 
-    res.end();
-    console[data.level](data.data);
+app.post('/allItems', function (req, res) {
+
+/*	connection.query('DESCRIBE int.intimby', function(err, rows, fields) {
+    	if (!err){
+    		var fields = [];
+    		rows.forEach(function(el){
+    			fields.push(el.Field);
+    		});
+    		res.end(JSON.stringify(fields));
+    	} else {
+    		res.end(JSON.stringify(err));
+    		console.error('Error while performing Query.');
+    	}
+    });
+*/
+	connection.query('SELECT * FROM int.intimby', function(err, rows, fields) {
+    	if (!err){
+    		res.end(JSON.stringify(rows.slice(-10)));
+    	} else {
+    		res.end(JSON.stringify(err));
+    		console.error('Error while performing Query.');
+    	}
+    });
+
+});
+
+app.post('/nodeLogger', function (req, res) {
+    console.log(req.body.counter);
+
+    
+    connection.query('SELECT * FROM int.intimby where counter=' + (req.body.counter || 1), function(err, rows, fields) {
+    	if (!err){
+    		if (rows[0].photo) {
+    			fs.writeFileSync('image.png', rows[0].photo);
+    			fs.readFile('image.png', function(err, data) {
+				   var base64data = new Buffer(data).toString('base64');
+				   rows[0].base64data = base64data;
+				   res.end(JSON.stringify(rows));
+				});
+
+    		}
+
+    		console.log('image.png', rows[0].photo);
+    		
+    	} else {
+    		res.end(JSON.stringify(err));
+    		console.log('Error while performing Query.');
+    	}
+    });
 });
 
 app.post('/int', function (req, res) {
 
-    var data = req.body;
-    console.log(data);
-	download(data.photoUrl, createName(data), function(){
-	  console.log('done');
-	});
+    console.log(req.body);
+	var query = createInsertQuery(req.body);
+	if(req.body.photoUrl){
 
-	var query = createInsertQuery(data);
-	console.log(query);
-	
-	connection.query('INSERT INTO sakila.test SET ?', query);
+		var fileName = createName(req.body);
+		
 
-//	connection.end();
+		download(req.body.photoUrl, fileName, function(){
+			console.log(query);
+			query.photo = fs.readFileSync(fileName)
+
+			connection.query('INSERT INTO int.intimby SET ?', query);
+			connection.query('INSERT INTO sakila.test SET ?', query);
+			console.log('done: ', req.body.photoUrl);
+
+		});
+	} else {
+		connection.query('INSERT INTO int.intimby SET ?', query);
+		connection.query('INSERT INTO sakila.test SET ?', query);
+	}
+
 
 	res.end();
 
@@ -85,32 +143,34 @@ function createName(data) {
 	'.jpg'
 
 }
-/*
-connection.connect();
 
-var testQuery1 = "INSERT INTO sakila.test (id, age, height, weight, phoneNumber, photoUrl, date, url) VALUES (227746, 24, 175, 52, '256076177', 'http://intimby.net/datingphoto/227746.jpg', '2017-02-15 20:44:58', 'http://intimby.ne/cgi-bin/viewad.pl?id=227746');"
-var testQuery2 = "INSERT INTO sakila.test (id, age, height, weight, phoneNumber, photoUrl, date, url, photoUrl) VALUES (010102, 22, 172, 52, '375290000002', 'test-url2', 'test-date2', 'tetsurltest2', 'test')"
-connection.query(testQuery1, function(err, rows, fields) {
-  if (!err)
-    console.log('The solution is: ', rows);
-  else
-    console.log('Error while performing Query.');
+//connection.connect();
+/*
+connection.query(`SELECT photo FROM sakila.test where counter=29;`, function(err, rows, fields) {
+  if (!err){
+	fs.writeFileSync('image.png', rows[0].photo);
+	} else {
+	console.log('Error while performing Query.');
+		
+	}
 });
 
 connection.end();*/
 // var testQuery1 = "INSERT INTO sakila.test (id, age, height, weight, phoneNumber, photoUrl, date, url) VALUES (227746, 24, 175, 52, '256076177', 'http://intimby.net/datingphoto/227746.jpg', '2017-02-15 20:44:58', 'http://intimby.ne/cgi-bin/viewad.pl?id=227746');"
+
 function createInsertQuery(data) {
 
 	var ID = +data.url.slice(-6);
-	var AGE = (data.age ? +data.age : 0);
-	var HEIGHT = (data.height ? +data.height : 0);
-	var WEIGHT = (data.weight ? +data.weight : 0);
-	var PHONE = (data.phoneNumber ? data.phoneNumber : "");
-	var EMAIL = (data.email ? data.email : "");
-	var PHOTO_URL = (data.photoUrl ? data.photoUrl : "");
+	var AGE = (data.age ? +data.age : null);
+	var HEIGHT = (data.height ? +data.height : null);
+	var WEIGHT = (data.weight ? +data.weight : null);
+	var PHONE = (data.phoneNumber ? data.phoneNumber : null);
+	var PHONESTR = (data.phoneNumber ? data.phoneNumber+'' : null);
+	var EMAIL = (data.email ? data.email : null);
+	var PHOTO_URL = (data.photoUrl ? data.photoUrl : null);
 	var DATE = data.date;
 	var URL = data.url;
-	var TEXT_INFO = (data.textInfo ? data.textInfo : "");
+	var TEXT_INFO = (data.textInfo ? data.textInfo : null);
 
 	var request = {
 		id: ID,
@@ -122,9 +182,14 @@ function createInsertQuery(data) {
 		date: DATE,
 		url: URL,
 		textInfo: TEXT_INFO,
-		email: EMAIL
+		email: EMAIL,
+		phoneStr: PHONESTR
 	};
-	var query = 'INSERT INTO sakila.test (id, age, height, weight, phoneNumber, photoUrl, date, url, textInfo) VALUES ('+ID+', '+AGE+', '+HEIGHT+', '+WEIGHT+', '+PHONE+', '+PHOTO_URL+', '+DATE+', '+URL+', '+ TEXT_INFO+ ')';
 
 	return request;
 }
+
+
+
+
+
