@@ -70,19 +70,17 @@ app.post('/nodeLogger', function (req, res) {
     console.log(req.body.counter);
 
     
-    connection.query('SELECT * FROM int.intimby where counter=' + (req.body.counter || 1), function(err, rows, fields) {
+    connection.query('SELECT * FROM sakila.test where counter=' + (req.body.counter || 1), function(err, rows, fields) {
     	if (!err){
-    		if (rows[0].photo) {
-    			fs.writeFileSync('image.png', rows[0].photo);
-    			fs.readFile('image.png', function(err, data) {
-				   var base64data = new Buffer(data).toString('base64');
-				   rows[0].base64data = base64data;
+//    		if (rows[0].photo) {
+//    			fs.writeFileSync('image.png', rows[0].photo);
+//    			fs.readFile('image.png', function(err, data) {
+//				   var base64data = new Buffer(data).toString('base64');
+//				   rows[0].base64data = base64data;
 				   res.end(JSON.stringify(rows));
-				});
+//				});
 
-    		}
-
-    		console.log('image.png', rows[0].photo);
+//    		}
     		
     	} else {
     		res.end(JSON.stringify(err));
@@ -103,11 +101,13 @@ app.post('/int', function (req, res) {
 		download(req.body.photoUrl, fileName, function(){
 			console.log(query);
 			query.photo = fs.readFileSync(fileName)
-
-			connection.query('INSERT INTO int.intimby SET ?', query);
-			connection.query('INSERT INTO sakila.test SET ?', query);
-			console.log('done: ', req.body.photoUrl);
-
+			fs.readFile(fileName, function(err, data) {
+				var base64data = new Buffer(data).toString('base64');
+				query.photoBase64 = base64data;
+				connection.query('INSERT INTO int.intimby SET ?', query);
+				connection.query('INSERT INTO sakila.test SET ?', query);
+				console.log('done: ', req.body.photoUrl);
+			});
 		});
 	} else {
 		connection.query('INSERT INTO int.intimby SET ?', query);
@@ -177,7 +177,6 @@ function createInsertQuery(data) {
 		age: AGE,
 		height: HEIGHT,
 		weight: WEIGHT,
-		phoneNumber: PHONE,
 		photoUrl: PHOTO_URL,
 		date: DATE,
 		url: URL,

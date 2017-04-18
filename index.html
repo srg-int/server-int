@@ -1,20 +1,131 @@
 <html>
     <head></head>
     <body>
+    <table>
+        <thead>
+            <tr>
+              <th>counter</th>
+              <th>id</th>
+              <th>age</th>
+              <th>height</th>
+              <th>weight</th>
+              <th>PhoneNummer</th>
+              <th>date</th>
+              <th>email</th>
+              <th>photoUrl</th>
+              <th>url</th>
+              <th>phoneStr</th>
+              <th>textInfo</th>
+            </tr>
+        </thead>
+<!--         <tfoot>
+            <tr>
+              <th>counter</th>
+              <th>id</th>
+              <th>age</th>
+              <th>height</th>
+              <th>weight</th>
+              <th>PhoneNummer</th>
+              <th>date</th>
+              <th>email</th>
+              <th>photoUrl</th>
+              <th>url</th>
+              <th>phoneStr</th>
+              <th>textInfo</th>
+            </tr>
+        </tfoot> -->
+  <tbody id='tbody'>
+    <tr>
+              <td id="counterSh">counter</td>
+              <td id="id">id</td>
+              <td id="age">age</td>
+              <td id="height">height</td>
+              <td id="weight">weight</td>
+              <td id="PhoneNummer">PhoneNummer</td>
+              <td id="date">date</td>
+              <td id="email">email</td>
+              <td id="photoUrl">photoUrl</td>
+              <td id="url">url</td>
+              <td id="phoneStr">phoneStr</td>
+              <td id="textInfo">textInfo</td>
+            </tr>
+  </tbody>
+</table>
     <button id="button">press</button>
+    <input id="counter" type="text" name="">
+    <div id="img-div"></div>
     <script type="text/javascript">
+    var imgDiv = document.getElementById('img-div');
+        var myImage = document.createElement('img');
         var button = document.getElementById('button');
+        var counter = document.getElementById('counter');
+        var tbody = document.getElementById('tbody');
+
+
         button.addEventListener('click', function(event){
-        window.fetch('http://127.0.0.1:3000/int', {
+        window.fetch('http://127.0.0.1:3000/nodeLogger', {
             method: 'post',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({location: location})
+            body: JSON.stringify({counter: counter.value})
+        }).then(function(res) {
+            imgDiv.innerHTML = '';
+            return res.json();
+        }).then(function(data) {
+            console.log(data);
+
+
+            counterSh.innerHTML = data[0].counter;
+            id.innerHTML = data[0].id;
+            age.innerHTML = data[0].age;
+            height.innerHTML = data[0].height;
+            weight.innerHTML = data[0].weight;
+            PhoneNummer.innerHTML = data[0].PhoneNummer;
+            date.innerHTML = data[0].date;
+            email.innerHTML = data[0].email;
+            photoUrl.innerHTML = data[0].photoUrl;
+            url.innerHTML = data[0].url;
+            phoneStr.innerHTML = data[0].phoneStr;
+            textInfo.innerHTML = data[0].textInfo;
+
+
+
+
+
+            
+
+
+
+
+            myImage.src = "data:image/png;base64," + data[0].photoBase64;
+            imgDiv.appendChild(myImage);
+            
+
+        }).catch(function(err) {
+            console.error(err);
         });
 
     });
-    </script>>
+
+    function blobToBase64(blob, cb) {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var dataUrl = reader.result;
+            var base64 = dataUrl.split(',')[1];
+            cb(base64);
+        };
+        return reader.readAsDataURL(blob);
+    };
+
+    </script>
+    <img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAABGdBTUEAALGP
+C/xhBQAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9YGARc5KB0XV+IA
+AAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAF1J
+REFUGNO9zL0NglAAxPEfdLTs4BZM4DIO4C7OwQg2JoQ9LE1exdlYvBBeZ7jq
+ch9//q1uH4TLzw4d6+ErXMMcXuHWxId3KOETnnXXV6MJpcq2MLaI97CER3N0
+vr4MkhoXe0rZigAAAABJRU5ErkJggg==" alt="Red dot" />
     </body>
 </html>
